@@ -87,6 +87,7 @@ namespace NuGetGallery
                          Title = p.Title,
                          VersionDownloadCount = p.DownloadCount
                      });
+        }
 
         internal static IQueryable<TVal> WithoutVersionSort<TVal>(this IQueryable<TVal> feedQuery)
         {
