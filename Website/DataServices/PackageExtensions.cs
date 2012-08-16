@@ -1,5 +1,10 @@
 ﻿using System;
+using System.Collections.ObjectModel;
+using System.Data.Entity;
 using System.Linq;
+using System.Linq.Expressions;
+using OData.Linq;
+using QueryInterceptor;
 
 namespace NuGetGallery
 {
@@ -10,6 +15,9 @@ namespace NuGetGallery
         public static IQueryable<V1FeedPackage> ToV1FeedPackageQuery(this IQueryable<Package> packages, string siteRoot)
         {
             return packages
+                     .WithoutNullPropagation()
+                     .WithoutVersionSort()
+                     .Include(p => p.PackageRegistration)
                      .Select(p => new V1FeedPackage
                      {
                          Id = p.PackageRegistration.Id,
@@ -45,6 +53,9 @@ namespace NuGetGallery
         public static IQueryable<V2FeedPackage> ToV2FeedPackageQuery(this IQueryable<Package> packages, string siteRoot)
         {
             return packages
+                     .WithoutNullPropagation()
+                     .WithoutVersionSort()
+                     .Include(p => p.PackageRegistration)
                      .Select(p => new V2FeedPackage
                      {
                          Id = p.PackageRegistration.Id,
@@ -77,6 +88,18 @@ namespace NuGetGallery
                          VersionDownloadCount = p.DownloadCount
                      });
 
+        internal static IQueryable<TVal> WithoutVersionSort<TVal>(this IQueryable<TVal> feedQuery)
+        {
+            return feedQuery.InterceptWith(new ODataRemoveVersionSorter());
+        }
+
+        private static string EnsureTrailingSlash(string siteRoot)
+        {
+            if (!siteRoot.EndsWith("/", StringComparison.Ordinal))
+            {
+                siteRoot = siteRoot + '/';
+            }
+            return siteRoot;
         }
     }
 }
