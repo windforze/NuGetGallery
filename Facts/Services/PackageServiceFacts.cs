@@ -93,6 +93,7 @@ namespace NuGetGallery
                 Assert.Equal("theTags", package.Tags);
                 Assert.Equal("theTitle", package.Title);
                 Assert.Equal("theCopyright", package.Copyright);
+                Assert.Null(package.Language);
                 Assert.False(package.IsPrerelease);
 
                 Assert.Equal("theFirstAuthor, theSecondAuthor", package.FlattenedAuthors);
@@ -122,6 +123,27 @@ namespace NuGetGallery
 
                 // Assert
                 Assert.Equal(expected, package.Tags);
+            }
+
+            [Fact]
+            public void WillReadTheLanguagePropertyFromThePackage()
+            {
+                var packageRegistrationRepo = new Mock<IEntityRepository<PackageRegistration>>();
+                var service = CreateService(
+                    packageRegistrationRepo: packageRegistrationRepo,
+                    setup: mockPackageSvc =>
+                    {
+                        mockPackageSvc.Setup(x => x.FindPackageRegistrationById(It.IsAny<string>())).Returns((PackageRegistration)null);
+                    });
+                var nugetPackage = CreateNuGetPackage(p => p.Setup(s => s.Language).Returns("fr"));
+                var currentUser = new User();
+
+                var package = service.CreatePackage(
+                    nugetPackage.Object,
+                    currentUser);
+
+                // Assert
+                Assert.Equal("fr", package.Language);
             }
 
             [Fact]
@@ -438,6 +460,21 @@ namespace NuGetGallery
                 var ex = Assert.Throws<EntityException>(() => service.CreatePackage(nugetPackage.Object, null));
 
                 Assert.Equal(String.Format(Strings.NuGetPackagePropertyTooLong, "Title", "4000"), ex.Message);
+            }
+
+            [Fact]
+            void WillThrowIfTheNuGetPackageLanguageIsLongerThan20()
+            {
+                // Arrange
+                var service = CreateService();
+                var nugetPackage = CreateNuGetPackage();
+                nugetPackage.Setup(x => x.Language).Returns(new string('a', 21));
+
+                // Act
+                var ex = Assert.Throws<EntityException>(() => service.CreatePackage(nugetPackage.Object, null));
+
+                // Assert
+                Assert.Equal(String.Format(Strings.NuGetPackagePropertyTooLong, "Language", "20"), ex.Message);
             }
 
             [Fact]
