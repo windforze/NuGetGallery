@@ -90,6 +90,16 @@ nav, section { display: block; }
 }
 
 /* General */
+.announcement {
+    background-color: #ffa344;
+    border: solid red 1px;
+    color: black;
+    font-size: 1.3em;
+    font-weight: bold;
+    padding: 10px;
+    text-align: center;
+}
+
 .message {
     background-color: #eff7fa;
     border: solid 1px;
